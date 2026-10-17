@@ -1,0 +1,13 @@
+{
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "gemini_model": "gemini-2.5-flash",
+  "chunk_size": 1200,
+  "chunk_overlap": 200,
+  "embedding_dimension": 384,
+  "document_count": 3397,
+  "chunk_count": 31063,
+  "index_type": "IndexFlatIP",
+  "normalized_embeddings": true,
+  "added_dataset": "/content/drive/MyDrive/gov_myscheme_data.csv",
+  "device_used_for_embedding": "cuda"
+}

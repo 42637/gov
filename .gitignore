@@ -1,0 +1,36 @@
+# Environment variables (contains API keys)
+.env
+*.env
+!.env.example
+
+# Python virtual environments & packages
+.venv/
+.app-venv/
+.pip-temp/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Node & Frontend dependencies and builds
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+tsconfig.tsbuildinfo
+
+# Large archives (exceeds GitHub 100MB limit)
+*.zip
+*.tar.gz
+*.rar
+
+# Logs
+*.log
+**/*.log
+.vite.err.log
+.vite.out.log
+
+# System files
+.DS_Store
+Thumbs.db
