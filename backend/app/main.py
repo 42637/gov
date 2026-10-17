@@ -64,10 +64,17 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Indian Government Schemes Assistant", lifespan=lifespan)
+app.state.ready = False
+app.state.error = None
 
-# Allow all localhost origins (any port) so dev server port changes never break CORS
-_allowed_origins = [
-    settings.frontend_origin,
+# Parse and clean allowed frontend origins
+_origins = set()
+if settings.frontend_origin:
+    for o in settings.frontend_origin.split(","):
+        cleaned = o.strip().rstrip("/")
+        if cleaned:
+            _origins.add(cleaned)
+_origins.update([
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:5175",
@@ -76,23 +83,38 @@ _allowed_origins = [
     "http://127.0.0.1:5174",
     "http://127.0.0.1:5175",
     "http://127.0.0.1:3000",
-]
+])
+_allowed_origins = list(_origins)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
 
+@app.get("/")
+def root():
+    return {
+        "service": "Indian Government Schemes Assistant API",
+        "status": "online",
+        "health": "/api/health",
+        "docs": "/docs",
+    }
+
+
 @app.get("/api/health")
 def health():
+    is_ready = getattr(app.state, "ready", False)
+    error = getattr(app.state, "error", None)
     return {
-        "status": "ready" if app.state.ready else "unavailable",
-        "rag_ready": app.state.ready,
+        "status": "ready" if is_ready else "unavailable",
+        "rag_ready": is_ready,
         "gemini_configured": bool(settings.gemini_api_key),
-        "error": app.state.error if not app.state.ready else None,
+        "error": error if not is_ready else None,
     }
 
 
@@ -101,10 +123,12 @@ def ask(request: AskRequest):
     question = request.question.strip()
     if not question:
         raise HTTPException(422, "Please enter a question.")
-    if not app.state.ready:
-        logger.error("RAG store not ready. Error: %s", app.state.error)
+    is_ready = getattr(app.state, "ready", False)
+    error = getattr(app.state, "error", None)
+    if not is_ready:
+        logger.error("RAG store not ready. Error: %s", error)
         raise HTTPException(
-            503, f"The scheme knowledge base is currently unavailable. {app.state.error or ''}"
+            503, f"The scheme knowledge base is currently unavailable. {error or ''}".strip()
         )
 
     # Step 1: Retrieve relevant chunks from local RAG model

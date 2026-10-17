@@ -26,8 +26,8 @@ class RagStore:
         if docs_file.is_file():
             try:
                 with docs_file.open("rb") as f:
-                    self.documents = pickle.load(f)
-                for d in self.documents:
+                    docs = pickle.load(f)
+                for d in docs:
                     m_name = re.search(r"scheme_name:\s*(.+)", d)
                     m_slug = re.search(r"slug:\s*(.+)", d)
                     m_cat = re.search(r"schemeCategory:\s*(.+)", d)
@@ -36,6 +36,7 @@ class RagStore:
                     cat = m_cat.group(1).strip() if m_cat else ""
                     url = f"https://www.myscheme.gov.in/schemes/{slug}" if slug else None
                     doc_meta.append({"scheme_name": name, "slug": slug, "url": url, "category": cat})
+                del docs
                 logger.info("Parsed %d documents metadata for RAG chunks", len(doc_meta))
             except Exception as e:
                 logger.warning("Could not parse documents.pkl metadata: %s", e)
